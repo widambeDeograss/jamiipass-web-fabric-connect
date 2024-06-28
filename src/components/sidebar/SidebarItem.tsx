@@ -29,7 +29,7 @@ const SidebarItems = ({ theme }:any) => {
       <Menu.Item key="/identity_requests" icon={<ReconciliationOutlined  size={10}/>}>
         Identity Requests
       </Menu.Item>
-      <Menu.Item key="/2" icon={<UserOutlined  size={10} className='text-[10px]'/>}>
+      <Menu.Item key="/profile" icon={<UserOutlined  size={10} className='text-[10px]'/>}>
        Organization profile
       </Menu.Item>
       </>):
@@ -41,7 +41,7 @@ const SidebarItems = ({ theme }:any) => {
       <Menu.Item key="/all_corporate_id_shares" icon={<CreditCardOutlined  size={10}/>}>
       Identity Shares
       </Menu.Item>
-      <Menu.Item key="/3" icon={<UserOutlined  size={10} className='text-[10px]'/>}>
+      <Menu.Item key="/corp_profile" icon={<UserOutlined  size={10} className='text-[10px]'/>}>
       Corporate Profile
       </Menu.Item>
       </>

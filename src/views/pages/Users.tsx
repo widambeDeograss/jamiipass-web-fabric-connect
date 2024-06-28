@@ -9,6 +9,7 @@ import BreadCrumb from "../../components/Breadcrumb/BreadCrumb";
 import { renderDateTime } from "../../utils/renderDateTime";
 import { baseUrl } from "../../utils/baseUrl";
 import { UserOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 
 interface IdentificationApprovedRequestInterFc {
   id: string;
@@ -26,7 +27,7 @@ interface IdentificationApprovedRequestInterFc {
 
 const ApprovedRequests = () => {
   const [isloading, setisloading] = useState(false);
-  const [addModalOpen, setaddModalOpen] = useState(false);
+  const navigate = useNavigate();
   const [identificationApprovedReqs, setidentificationApprovedReqs] = useState<
     IdentificationApprovedRequestInterFc[]
   >([]);
@@ -65,6 +66,7 @@ const ApprovedRequests = () => {
   }, []);
 
   const handleView = (id:string) => {
+    navigate('/organization_identity_request_process/' + `${id}`);
     console.log(`View action for ID: ${id}`);
   };
 
@@ -88,7 +90,7 @@ const ApprovedRequests = () => {
 
     const menu = (
       <Menu>
-        <Menu.Item key="view" onClick={() => handleItemClick('view')}>
+        <Menu.Item key="view" onClick={() => handleItemClick('View')}>
         view Identity
         </Menu.Item>
         <Menu.Item key="process" onClick={() => handleItemClick('edit')}>

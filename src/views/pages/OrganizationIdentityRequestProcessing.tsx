@@ -8,12 +8,13 @@ import { useDataFetch } from "../../hooks/datahook";
 import BreadCrumb from "../../components/Breadcrumb/BreadCrumb";
 import { renderDateTime } from "../../utils/renderDateTime";
 import { baseUrl } from "../../utils/baseUrl";
-import { EyeInvisibleFilled, UploadOutlined } from "@ant-design/icons";
+import { EyeInvisibleFilled, UploadOutlined, EyeFilled } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import ConnectingToNetworkModel from "../../components/modals/ConnectingToNetworkModel";
 import { useFormPost } from "../../hooks/formDataHook";
 import { networkUrls } from "../../utils/apis";
 import axios from "axios";
+import DocumentViewer from "../../components/identityViewer/IdentityViewer";
 
 interface IdentificationRequestInterFc {
   id: string;
@@ -38,6 +39,28 @@ interface organizationInterfc {
   org_name: string;
 }
 
+function formatDate(input: string): string | null {
+  const dateParts = input.split('-');
+
+  if (dateParts.length !== 3) {
+      console.error('Invalid date format');
+      return null;
+  }
+
+
+  const year = dateParts[0];
+  let month = dateParts[1];
+  let day = dateParts[2];
+
+  month = month.padStart(2, '0');
+  day = day.padStart(2, '0');
+
+  const formattedDateString = `${year}-${month}-${day}`;
+
+  // Return the formatted date string
+  return formattedDateString;
+}
+
 const OrganizationIdentityRequestProcessing = () => {
   const [isloading, setisloading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<any>(null);
@@ -50,12 +73,15 @@ const OrganizationIdentityRequestProcessing = () => {
   const [isConnecting, setisConnecting] = useState(false);
   const [connectionToken, setconnectionToken] = useState();
   const [orgInfo, setorgInfo] = useState<organizationInterfc>();
+  const [OrganizationCertificates, setOrganizationCertificates] = useState<any>([]);
+  const [documentHash, setdocumentHash] = useState();
   const params = useParams();
   const dispatch = useAppDispatch();
   const dataFetch = useDataFetch();
   const formPost = useFormPost();
 
   const loadData = async () => {
+
     try {
       setisloading(true);
       const response = await dataFetch.fetch({
@@ -81,6 +107,115 @@ const OrganizationIdentityRequestProcessing = () => {
       );
     }
   };
+
+  const handleConnectToNetwork = async () => {
+    const body = {
+      username: orgInfo?.org_name === "NIDA" ?  "NIDAadm": orgInfo?.org_name === "DIT"? "DITadm":orgInfo?.org_name === "NHIF"? "NHIFadm":orgInfo?.org_name === "RITA"? "RITAadm":"TRAadm",
+      orgName: orgInfo?.org_name === "NIDA" ?  "NIDAOrg": orgInfo?.org_name === "DIT"? "DITOrg":orgInfo?.org_name === "NHIF"? "NHIFOrg":orgInfo?.org_name === "RITA"? "RITAOrg":"TRAOrg",
+    };
+    setisConnecting(true);
+    try {
+      const response = await formPost.post({
+        url: networkUrls.connectToNetwork,
+        data: body,
+      });
+      console.log(response);
+
+      if (response.success) {
+        setconnectionToken(response?.message.token);
+        dispatch(
+          addAlert({
+            title: "Connection success",
+            type: "success",
+            message: "Connected successfull to JamiiPass Network",
+          })
+        );
+      } else {
+        dispatch(
+          addAlert({
+            title: "Connection failed",
+            type: "error",
+            message: "Invalid Connection credentials try again!",
+          })
+        );
+      }
+      setisConnecting(false);
+    } catch (error: any) {
+      if (!error?.respose) {
+        dispatch(
+          addAlert({
+            title: "Connection failed",
+            type: "error",
+            message: "No Network response responce try again later!",
+          })
+        );
+      } else if (error.respose?.status === 400) {
+        dispatch(
+          addAlert({
+            title: "Login failed",
+            type: "error",
+            message: "No Network response responce try again later!!",
+          })
+        );
+      } else {
+        dispatch(
+          addAlert({
+            title: "Login failed",
+            type: "error",
+            message: "No server responce try again later!",
+          })
+        );
+      }
+    } finally {
+      setisConnecting(false);
+    }
+  };
+
+  const getOrganizationAssignedCertificates = async () => {
+    handleConnectToNetwork();
+
+   try {
+    const requestHeader = {
+      headers: {
+        authorization: "Bearer " + connectionToken,
+      },
+    };
+    // let args = req.query.args;
+    //     let fcn = req.query.fcn;
+    await axios
+        .get(networkUrls.addCertToNtwork + `?fcn=GetIdentitiesByOrganization&&args=${orgInfo?.org_name}`, requestHeader)
+        .then((res) => {
+          if (res.status === 200) {
+            const cert = res.data?.result?.filter((c:any) =>  c.documentNo == IdetificationRequest?.card_no);
+            setOrganizationCertificates(cert[0]);
+            setdocumentHash(cert[0].documentHash);
+            downloadConvertedFile();
+            console.log(cert);         
+            dispatch(
+              addAlert({
+                title: "Identity retrived success",
+                type: "success",
+                message: `Identity retrived successfull to JamiiPass Network`,
+              })
+            );
+            
+          }
+        })
+        .catch((error) => {
+          dispatch(
+            addAlert({
+              title: "Connection failed",
+              type: "error",
+              message: "No Network response responce try again later!",
+            })
+          );
+          // throw error.message;
+          throw error;
+        });
+   } catch (error) {
+    
+   }
+  }
 
   useEffect(() => {
     loadData();
@@ -155,8 +290,8 @@ const OrganizationIdentityRequestProcessing = () => {
   };
 
   const downloadConvertedFile = () => {
-    if (convertedFile) {
-      const byteString = atob(convertedFile);
+    if (documentHash) {
+      const byteString = atob(documentHash);
       const ab = new ArrayBuffer(byteString.length);
       const ia = new Uint8Array(ab);
       for (let i = 0; i < byteString.length; i++) {
@@ -166,73 +301,10 @@ const OrganizationIdentityRequestProcessing = () => {
       const url = window.URL.createObjectURL(newBlob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = selectedFile.name;
+      a.download = "document";
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
-    }
-  };
-
-  const handleConnectToNetwork = async () => {
-    const body = {
-      username: "RITAadm",
-      orgName: "RITAOrg",
-    };
-    setisConnecting(true);
-    try {
-      const response = await formPost.post({
-        url: networkUrls.connectToNetwork,
-        data: body,
-      });
-      console.log(response);
-
-      if (response.success) {
-        setconnectionToken(response?.message.token);
-        dispatch(
-          addAlert({
-            title: "Connection success",
-            type: "success",
-            message: "Connected successfull to JamiiPass Network",
-          })
-        );
-      } else {
-        dispatch(
-          addAlert({
-            title: "Connection failed",
-            type: "error",
-            message: "Invalid Connection credentials try again!",
-          })
-        );
-      }
-      setisConnecting(false);
-    } catch (error: any) {
-      if (!error?.respose) {
-        dispatch(
-          addAlert({
-            title: "Connection failed",
-            type: "error",
-            message: "No Network response responce try again later!",
-          })
-        );
-      } else if (error.respose?.status === 400) {
-        dispatch(
-          addAlert({
-            title: "Login failed",
-            type: "error",
-            message: "No Network response responce try again later!!",
-          })
-        );
-      } else {
-        dispatch(
-          addAlert({
-            title: "Login failed",
-            type: "error",
-            message: "No server responce try again later!",
-          })
-        );
-      }
-    } finally {
-      setisConnecting(false);
     }
   };
 
@@ -253,7 +325,8 @@ const OrganizationIdentityRequestProcessing = () => {
       },
     };
     const tranactionId = "id" + Math.random().toString(16).slice(2);
-    const date = new Date();
+    const date =`${ new Date().getFullYear()}-${ new Date().getMonth()}-${ new Date().getDate()}`;
+    const formatedDate = formatDate(date);
     const data = {
       fcn: "CreateIdentity",
       peers: [
@@ -272,7 +345,7 @@ const OrganizationIdentityRequestProcessing = () => {
         IdetificationRequest?.card_no,
         `${IdetificationRequest?.first_name} ${IdetificationRequest?.last_name}`,
         orgInfo?.org_name,
-        date,
+        formatedDate,
         "true",
       ],
     };
@@ -315,6 +388,10 @@ const OrganizationIdentityRequestProcessing = () => {
     }
   };
 
+
+ console.log('====================================');
+ console.log(documentHash);
+ console.log('====================================');
   return (
     <div className="flex w-full flex-col gap-5">
       <div className="w-ful mt-3 flex h-fit flex-col gap-5 lg:grid lg:grid-cols-12">
@@ -428,7 +505,12 @@ const OrganizationIdentityRequestProcessing = () => {
                 </div>
               </div>
               <div className="mr-4 flex items-center justify-center text-gray-600 dark:text-white">
-                <EyeInvisibleFilled />
+               { IdetificationRequest?.request_state === "Granted"? <span
+               className="hover:bg-slate-300 p-[0.3px] px-1 rounded-sm cursor-pointer"
+               onClick={() => {
+                getOrganizationAssignedCertificates();
+              }}
+               ><EyeFilled /></span>:<EyeInvisibleFilled />} 
               </div>
             </div>
             <div className="mt-6">
@@ -481,6 +563,12 @@ const OrganizationIdentityRequestProcessing = () => {
                     <button className="animate-pulse bg-green-200">
                       Granted
                     </button>
+                    {/* <button
+                      className=" bg-blue-300 hover:border-2 hover:border-black"
+                      onClick={() => changeRequestStatus("Processing")}
+                    >
+                      Mark as Processing
+                    </button> */}
                   </div>
                 ) : (
                   <div className="flex gap-5 flex-wrap text-xs">
@@ -557,6 +645,12 @@ const OrganizationIdentityRequestProcessing = () => {
       )}
       <ConnectingToNetworkModel openMOdal={isConnecting} type="connecting" />
       <ConnectingToNetworkModel openMOdal={PostingCertificate} type="posting" />
+      {/* {
+      documentHash &&  ( */}
+         <DocumentViewer documentBase64={documentHash}/>
+        
+        {/* )
+      } */}
     </div>
   );
 };

@@ -31,5 +31,6 @@ export const organizationUrls = {
 export const networkUrls = {
     connectToNetwork:baseUrl + "/users/login",
     addCertToNtwork:baseUrl + "/channels/mychannel/chaincodes/id",
+    getCertFromNtwork:baseUrl + "/channels/mychannel/chaincodes/id",
     changeRequestStatus:baseUrl + "/app/org/update_user_card_request"
 }

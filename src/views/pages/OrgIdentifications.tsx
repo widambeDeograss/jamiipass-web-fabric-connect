@@ -113,7 +113,7 @@ const OrgIdentifications = () => {
                       console.log(id);
                     }}
                   >
-                    Edit
+                    View
                   </Button>
                 </div>
               )}

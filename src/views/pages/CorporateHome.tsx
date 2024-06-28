@@ -391,8 +391,8 @@ const Home = () => {
            <Row gutter={16} align="middle">
                <Col span={12}>
                    <Statistic
-                       title="Today's Money"
-                       value="$53,897"
+                       title="Inactive Identities"
+                       value="53"
                        valueStyle={{
                            fontSize: "smaller",
                            fontWeight: "bold",

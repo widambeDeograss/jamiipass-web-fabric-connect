@@ -15,6 +15,8 @@ import ProfileOverview from '../views/profile';
 import { CorpIdentityShareDetails } from '../views/pages/CorpIdentityShareDetails';
 import OrganizationIdentityRequestProcessing from '../views/pages/OrganizationIdentityRequestProcessing';
 import OrganizationHome from '../views/pages/OrganizationHome';
+import Profile from '../views/auth/OrgProfile';
+import CoporateProfile from '../views/auth/CoporateProfile';
 
 
 const AppRouter = () => {
@@ -50,7 +52,8 @@ const AppRouter = () => {
           { element: <Navigate to="/" />},
           { path: "", element:  <Home/> },
           { path: "identity_requests", element:  <Requests/> },
-          { path: "profile", element:  <ProfileOverview/> },
+          { path: "profile", element:  <Profile/> },
+          { path: "corp_profile", element:  <CoporateProfile/> },
           { path: "org_identifications", element:  <OrgIdentifications/> },
           { path: "org_approved_identifications", element:  <ApprovedRequests/> },
           { path: "all_corporate_id_shares", element:  <CorporateIdentityShares/> },
