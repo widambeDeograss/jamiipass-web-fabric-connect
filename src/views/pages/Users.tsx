@@ -93,10 +93,9 @@ const ApprovedRequests = () => {
         <Menu.Item key="view" onClick={() => handleItemClick('View')}>
         view Identity
         </Menu.Item>
-        <Menu.Item key="process" onClick={() => handleItemClick('edit')}>
+        {/* <Menu.Item key="process" onClick={() => handleItemClick('edit')}>
         Deactivate Identity
-        </Menu.Item>
-        
+        </Menu.Item> */}  
       </Menu>
     );
 

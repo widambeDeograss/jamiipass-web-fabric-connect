@@ -1,27 +1,21 @@
 import { useEffect, useState } from "react";
 import {
-  Avatar,
-  Button,
   Card,
-  Radio,
-  Table,
-  Badge,
-  Menu,
-  Dropdown,
-  
 } from "antd";
-import { corporateUrls } from "../../utils/apis";
-import { banner1, avatarProfile } from "../../components/entryFile/imagePaths";
+import { corporateUrls, networkUrls } from "../../utils/apis";
+import { banner1 } from "../../components/entryFile/imagePaths";
 import { addAlert } from "../../app/store/slices/AlertsState_slice";
 import { useAppDispatch } from "../../app/store/store-hooks";
-import Column from "antd/es/table/Column";
 import { useDataFetch } from "../../hooks/datahook";
 import BreadCrumb from "../../components/Breadcrumb/BreadCrumb";
 import { renderDateTime } from "../../utils/renderDateTime";
 import { baseUrl } from "../../utils/baseUrl";
-import { UserOutlined, ExclamationCircleOutlined, EyeInvisibleFilled, EyeFilled } from "@ant-design/icons";
-import modal from "antd/es/modal";
-import { useNavigate, useParams } from "react-router-dom";
+import {  EyeFilled } from "@ant-design/icons";
+import { useParams } from "react-router-dom";
+import { useFormPost } from "../../hooks/formDataHook";
+import axios from "axios";
+import ConnectingToNetworkModel from "../../components/modals/ConnectingToNetworkModel";
+import DocumentViewer from "../../components/identityViewer/IdentityViewer";
 
 interface historyInterFc {
   id: string;
@@ -33,14 +27,18 @@ interface historyInterFc {
   profile: string;
   phone: string;
   cards: string;
+shared_hash:any;
 }
 
 export const CorpIdentityShareDetails = () => {
   const [isloading, setisloading] = useState(false);
-  const [addModalOpen, setaddModalOpen] = useState(false);
   const [shareHistory, setshareHistory] = useState<historyInterFc>();
   const [shareCard, setshareCard] = useState([]);
+  const [isConnecting, setisConnecting] = useState(false);
+  const [connectionToken, setconnectionToken] = useState();
+  const [documentHash, setdocumentHash] = useState();
   const params = useParams();
+  const formPost = useFormPost();
   const dispatch = useAppDispatch();
   const dataFetch = useDataFetch();
   
@@ -51,6 +49,8 @@ export const CorpIdentityShareDetails = () => {
         url: corporateUrls.corporateShareInfo + `/${params.id}`,
       });
       if (response) {
+        console.log(response);
+        
         setshareHistory(response?.data);
       }
       setisloading(false);
@@ -69,7 +69,155 @@ export const CorpIdentityShareDetails = () => {
   useEffect(() => {
     loadData();
   }, []);
+
   
+  const handleConnectToNetwork = async () => {
+    const body = {
+      username: "NHIFadm",
+      orgName: "NHIFOrg"
+    };
+    setisConnecting(true);
+    try {
+      const response = await formPost.post({
+        url: networkUrls.connectToNetwork,
+        data: body,
+      });
+      console.log(response);
+
+      if (response.success) {
+        setconnectionToken(response?.message.token);
+        dispatch(
+          addAlert({
+            title: "Connection success",
+            type: "success",
+            message: "Connected successfull to JamiiPass Network",
+          })
+        );
+      } else {
+        dispatch(
+          addAlert({
+            title: "Connection failed",
+            type: "error",
+            message: "Invalid Connection credentials try again!",
+          })
+        );
+      }
+      setisConnecting(false);
+    } catch (error: any) {
+      console.log(error);
+      
+      if (!error?.respose) {
+        dispatch(
+          addAlert({
+            title: "Connection failed",
+            type: "error",
+            message: "No Network response responce try again later!",
+          })
+        );
+      } else if (error.respose?.status === 400) {
+        dispatch(
+          addAlert({
+            title: "Login failed",
+            type: "error",
+            message: "No Network response responce try again later!!",
+          })
+        );
+      } else {
+        dispatch(
+          addAlert({
+            title: "Login failed",
+            type: "error",
+            message: "No server responce try again later!",
+          })
+        );
+      }
+    } finally {
+      setisConnecting(false);
+    }
+  };
+
+  const getSharedDocument = async (tranactionId:any) => {
+    handleConnectToNetwork();
+    console.log(tranactionId);
+    console.log('====================================');
+    console.log(connectionToken);
+    console.log('====================================');
+
+   try {
+    const requestHeader = {
+      headers: {
+        authorization: "Bearer " + connectionToken,
+      },
+    };
+
+    await axios
+        .get(networkUrls.getCertFromNtwork + `?fcn=GetIdentityByTransactionID&&args=${tranactionId}`, requestHeader)
+        .then((res:any) => {
+          if (res.status === 200) {
+            // setOrganizationCertificates(cert[0]);
+            setdocumentHash(res?.data?.result?.documentHash);
+            downloadConvertedFile();
+            console.log(res);  
+            dispatch(
+              addAlert({
+                title: "Identity retrived success",
+                type: "success",
+                message: `Identity retrived successfull to JamiiPass Network`,
+              }) 
+              
+            );
+      
+            
+          //  }else{
+          //   dispatch(
+          //     addAlert({
+          //       title: "Identity retrived failed",
+          //       type: "error",
+          //       message: `No Identity with this user. Identity share expired`,
+          //     })
+          //   );
+          //  }
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+          
+          dispatch(
+            addAlert({
+              title: "Connection failed",
+              type: "error",
+              message: "No Network response responce try again later!",
+            })
+          );
+          // throw error.message;
+          throw error;
+        });
+   } catch (error) {
+    
+   }
+  }
+
+  const downloadConvertedFile = () => {
+    if (documentHash) {
+      const byteString = atob(documentHash);
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      const newBlob = new Blob([ia], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(newBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "document";
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
+  };
+  console.log('====================================');
+ console.log(documentHash);
+ console.log('====================================');
      
   return  (
   <div className="flex w-full flex-col gap-5">
@@ -103,7 +251,7 @@ export const CorpIdentityShareDetails = () => {
     </Card>
     </div>
     <div className="col-span-5 lg:col-span-9 lg:mb-0 3xl:col-span-5">
-    <Card extra={"w-full p-4 h-full"}>
+    <Card extra={"Identity share details"}>
       <div className="mb-8 w-full">
         <h4 className="text-xl font-bold text-navy-700 dark:text-white">
           Identities shared
@@ -126,7 +274,7 @@ export const CorpIdentityShareDetails = () => {
             {shareHistory?.cards?.split("_")[0]}
             </p>
             <p className="mt-2 text-sm text-gray-600">
-              Date issued #1 .
+              Date issued .
               <a
                 className="ml-1 font-medium text-brand-500 hover:text-brand-500 dark:text-white"
                 href=" "
@@ -136,7 +284,9 @@ export const CorpIdentityShareDetails = () => {
             </p>
           </div>
         </div>
-        <div className="mr-4 flex items-center justify-center text-gray-600 dark:text-white">
+        <div className="mr-4 flex items-center justify-center text-gray-600 dark:text-white cursor-pointer"
+        onClick={() => getSharedDocument(shareHistory?.shared_hash?.split("_")[0])}
+        >
           <EyeFilled />
         </div>
       </div>
@@ -160,16 +310,19 @@ export const CorpIdentityShareDetails = () => {
             </p>
           </div>
         </div>
-        <div className="mr-4 flex items-center justify-center text-gray-600 dark:text-white">
+        <div className="mr-4 flex items-center justify-center text-gray-600 dark:text-white cursor-pointer"
+         onClick={() => getSharedDocument(shareHistory?.shared_hash?.split("_")[1])}
+        >
           <EyeFilled />
         </div>
       </div>
     
-
-    
     </Card>
     </div>
-
-  </div></div>
+   
+  </div>
+  <ConnectingToNetworkModel openMOdal={isConnecting} type="connecting" />
+  <DocumentViewer documentBase64={documentHash}/>
+  </div>
   )
 };

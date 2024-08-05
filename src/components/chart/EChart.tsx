@@ -1,11 +1,58 @@
 
-
 import ReactApexChart from "react-apexcharts";
 import { Row, Col, Typography } from "antd";
 import eChart from "./configs/eChart";
+import { useEffect, useState } from "react";
+import { useAppDispatch } from "../../app/store/store-hooks";
+import { useDataFetch } from "../../hooks/datahook";
+import { organizationUrls } from "../../utils/apis";
+import { addAlert } from "../../app/store/slices/AlertsState_slice";
+const { Title, Paragraph } = Typography;
 
 function EChart() {
-  const { Title, Paragraph } = Typography;
+  const [ChartSiries, setChartSiries] = useState([]);
+  const [isloading, setisloading] = useState(false);
+  const dispatch = useAppDispatch();
+  const dataFetch = useDataFetch();
+
+  const loadData = async () => {
+  
+    try {
+      setisloading(true);
+      const responseOrg = await dataFetch.fetch({
+        url: organizationUrls.organizationInfo,
+      });
+      if (responseOrg) {
+        const response = await dataFetch.fetch({
+          url: organizationUrls.organizationStats,
+        });
+        console.log(response);
+       const data =  response?.series?.map((st:any) => {
+         return{
+          ...st,
+          color: "#4CA9FF"
+         }
+       })
+       console.log(data);
+       setChartSiries(data);
+       
+      }
+      setisloading(false);
+    } catch (error) {
+      setisloading(false);
+      dispatch(
+        addAlert({
+          title: "Error",
+          type: "error",
+          message: "Failed to fetch Org Stats try again later!",
+        })
+      );
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const items = [
     {
@@ -26,13 +73,15 @@ function EChart() {
     },
   ];
 
+
+
   return (
     <>
       <div id="chart">
         <ReactApexChart
           className="bar-chart"
           options={eChart.options}
-          series={eChart.series}
+          series={ChartSiries}
           type="bar"
           height={220}
         />
@@ -45,7 +94,7 @@ function EChart() {
         <Paragraph className="lastweek">
           Total citizens requesting digital identification from this organization per month
         </Paragraph>
-        <Row gutter>
+        {/* <Row >
           {items.map((v, index) => (
             <Col xs={6} xl={6} sm={6} md={6} key={index}>
               <div className="chart-visitor-count">
@@ -54,7 +103,7 @@ function EChart() {
               </div>
             </Col>
           ))}
-        </Row>
+        </Row> */}
       </div>
     </>
   );

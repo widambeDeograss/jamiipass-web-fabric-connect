@@ -6,6 +6,10 @@ import { baseUrl } from "../../utils/baseUrl";
 import { organizationUrls } from "../../utils/apis";
 import modal from "antd/es/modal";
 import { useDataFetch } from "../../hooks/datahook";
+import { useAppDispatch } from "../../app/store/store-hooks";
+import { addAlert } from "../../app/store/slices/AlertsState_slice";
+import axios from "axios";
+
 
 interface organizationInterfc {
   email: string;
@@ -20,6 +24,8 @@ interface organizationInterfc {
 const Profile: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setisEditing] = useState(false);
+  const [file, setFile] = useState<any>(null);
+  const dispatch = useAppDispatch();
   const [organizatioInfo, setorganizatioInfo] = useState<organizationInterfc>();
   const datafetch = useDataFetch();
 
@@ -59,29 +65,67 @@ const Profile: React.FC = () => {
    loadData();
   }, [])
   
-  const handleCancel = () => {
-    // Handle cancel action for personal information
+  const handleFileChange = (event: any) => {
+    setFile(event?.target?.files[0]);
   };
 
-  const handlePhotoSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmitProfilePic = async (event:any) => {
     event.preventDefault();
-    // Handle form submission for user photo
+    if (!file) {
+      dispatch(addAlert({title:"Warning", type:"warning", message:"Select an image file first!"}));
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await axios.post(`${baseUrl}/app/org/update/${organizatioInfo?.org_id}/pic`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      if (response.data.success) {
+        dispatch(addAlert({title:"Sucess", type:"success", message:"Profile picture updated successfully!"}));
+        
+      }
+      // You can add more actions here, like updating the UI
+    } catch (error) {
+      dispatch(addAlert({title:"Error", type:"error", message:"Failed to update profile!"}));
+
+    }
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // Handle file change for user photo
+  const updatePassword = async (values:any) => {
+    try {
+      const response = await axios.put(`${baseUrl}/app/corp/update/${organizatioInfo?.org_id}/password`, values);
+      console.log(response);
+      
+      if (response.status === 200) {
+        dispatch(addAlert({title:"Sucess", type:"success", message:"Profile Info updated successfully!"}));
+        
+      }
+      // You can add more actions here, like updating the UI
+    } catch (error) {
+      dispatch(addAlert({title:"Error", type:"error", message:"Failed to update profile!"}));
+
+    }
   };
 
-  const handlePhotoCancel = () => {
-    // Handle cancel action for user photo
-  };
+  const updateProfileInfo = async (values:any) => {
+    try {
+      const response = await axios.put(`${baseUrl}/app/corp/update/${organizatioInfo?.org_id}`, values);
+      console.log(response);
+      
+      if (response.status === 200) {
+        dispatch(addAlert({title:"Sucess", type:"success", message:"Profile Info updated successfully!"}));
+        
+      }
+      // You can add more actions here, like updating the UI
+    } catch (error) {
+      dispatch(addAlert({title:"Error", type:"error", message:"Failed to update profile!"}));
 
-  const deletePhoto = () => {
-    // Handle delete action for user photo
-  };
-
-  const updatePhoto = () => {
-    // Handle update action for user photo
+    }
   };
   return (
     <>
@@ -104,7 +148,7 @@ const Profile: React.FC = () => {
             </div>
             <div className="p-7">
               <Form
-                onFinish={handleSubmit}
+                onFinish={updateProfileInfo}
                 layout="vertical"
                 className="row-col"
                 disabled={!isEditing}
@@ -121,7 +165,7 @@ const Profile: React.FC = () => {
                     },
                   ]}
                 >
-                  <Input placeholder="Email" type="email" className="" />
+                  <Input placeholder={organizatioInfo?.email} type="email" className="" />
                 </Form.Item>
                 <Form.Item
                   className="username"
@@ -135,7 +179,7 @@ const Profile: React.FC = () => {
                     },
                   ]}
                 >
-                  <Input placeholder="Name" type="text" className="" />
+                  <Input placeholder={organizatioInfo?.org_name} type="text" className="" />
                 </Form.Item>
                 <Form.Item
                   className="username"
@@ -149,7 +193,7 @@ const Profile: React.FC = () => {
                     },
                   ]}
                 >
-                  <Input placeholder="Phone" type="text" className="" />
+                  <Input placeholder={organizatioInfo?.phone} type="text" className="" />
                 </Form.Item>
 
                 {/* <Form.Item
@@ -277,6 +321,7 @@ const Profile: React.FC = () => {
                     Cancel
                   </Button>
                   <Button
+                  onClick={handleSubmitProfilePic}
                     // style={{ width: "100%" }}
                     type="primary"
                     htmlType="submit"
@@ -299,7 +344,7 @@ const Profile: React.FC = () => {
             </div>
             <div className="p-7">
               <Form
-                onFinish={handleSubmit}
+                onFinish={updatePassword}
                 layout="vertical"
                 className="row-col"
                 disabled={!isEditing}

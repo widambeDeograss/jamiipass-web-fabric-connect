@@ -53,18 +53,29 @@ const Header = (props:{record:recordInterfc}) => {
           ">JamiiPass</h3>
         </div>
         
-        {isOrg === "orgn"?
-        <div>
-
-        <h3 className="block flex-shrink-0 font-semibold text-lg
-          ">{props?.record.name === "NHIF"? `National Health Insuarance Fund (${props.record.name})`:`${props.record.name}`}</h3>
-        </div>: 
-        <div>
-
-        <h3 className="block flex-shrink-0 underline font-semibold text-lg
-          ">{props?.record.name}</h3>
-        </div>
+        {isOrg === "orgn" ?
+  <div>
+    <h3 className="block flex-shrink-0 font-semibold text-lg">
+      {props?.record.name === "NHIF" ? 
+        `National Health Insurance Fund (${props.record.name})` :
+        props?.record.name === "DIT" ? 
+          `Dar es Salaam Institute of Technology (${props.record.name})` :
+          props?.record.name === "NIDA" ? 
+            `National Identification Authority (${props.record.name})` :
+            props?.record.name === "RITA" ? 
+              `Registration Insolvency and Trusteeship Agency (${props.record.name})` :
+              props?.record.name === "TRA" ? 
+                `Tanzania Revenue Authority (${props.record.name})` :
+                `${props.record.name}`
       }
+    </h3>
+  </div> :
+  <div>
+    <h3 className="block flex-shrink-0 underline font-semibold text-lg">
+      {props?.record.name}
+    </h3>
+  </div>
+}
         
        
         

@@ -1,11 +1,12 @@
-import React,{useState} from "react";
+import React,{useEffect, useState} from "react";
 import BreadCrumb from "../../components/Breadcrumb/BreadCrumb";
-import {Button, Card, Col, List, Row, Statistic, Typography, Timeline} from "antd";
+import {Button, Card, Col, Row, Statistic, Typography, Timeline} from "antd";
 import {WalletOutlined, CreditCardFilled, } from "@ant-design/icons";
-import { Colors } from "../../constants/Colors";
 import Echart from "../../components/chart/EChart";
 import LineChart from "../../components/chart/LineChart";
 import { useAppSelector } from "../../app/store/store-hooks";
+import axios from "axios";
+import { baseUrl } from "../../utils/baseUrl";
 
 const {Title, Paragraph, Text} = Typography;
 
@@ -32,6 +33,43 @@ const timelineList = [
 const Home = () => {
   const isOrg = useAppSelector((state) => state.AppStateReducer.isOrg);
   const [reverse, setReverse] = useState(false);
+  const [corporateStats, setCorporateStats] = useState({
+    totalIdentifications: 0,
+    totalUsersAssigned: 0,
+    totalRequests: 0,
+    totalDeniedRequests: 0,
+  });
+
+  const [organizationStats, setOrganizationStats] = useState({
+    totalIdentities: 0,
+    totalUsers: 0,
+    todayShared: 0,
+    inactiveIdentities: 0,
+  });
+
+  const [timelineList, setTimelineList] = useState([]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const corporateStatsPromise = await axios.get(`${baseUrl}/app/corp/corporate_stats`);
+        const organizationStatsPromise = await axios.get(`${baseUrl}/app/org/organization_stats`);
+
+        const [corporateResponse, organizationResponse] = await Promise.all([
+          corporateStatsPromise,
+          organizationStatsPromise,
+        ]);
+
+        setCorporateStats(corporateResponse.data);
+        setOrganizationStats(organizationResponse.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchStats();
+  }, [baseUrl]);
+  
 
     const textColor = "black"; 
   return (
@@ -40,241 +78,38 @@ const Home = () => {
         
    
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-      {isOrg === "orgn"? 
-       <div className="grid grid-cols-1 mt-3 gap-10 xl:grid-cols-4  lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 px-5 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
-        <Card style={{ minHeight: "125px", minWidth: "83x" }}>
-          <Row gutter={16} align="middle">
-            <Col span={12}>
-              <Statistic
-                  title="Total Identifications"
-                  value="4"
-                  valueStyle={{
-                    fontSize: "xx-small",
-                    fontWeight: "bold",
-                    color: textColor,
-                  }}
-              />
-            </Col>
-            <Col span={12}>
-              <div
-                  style={{
-                    borderRadius: "50%",
-                    height: "45px",
-                    maxWidth: "45px",
-                    minWidth:"43px",
-                    backgroundColor: Colors.secondary,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginLeft: "40px",
-                    // padding:"10px"
-                    // boxShadow: '200px rgba(0, 0, 0, 0.1)'
-                  }}
-                  className="min"
-              >
-                <WalletOutlined className="text-white font-bold" />
-              </div>
-            </Col>
-          </Row>
-          <p
-                style={{
-                    color: "gray.400",
-                    fontSize: "xx-small",
-                    display: "inline-flex",
-                    justifyContent: "space-between",
-                    marginTop: "10px",
-                }}
-            >
-                <span style={{ color: "green", fontWeight: "bold" }}>
-                  +3.48%{" "}
-                </span>
-                <span className="ml-10">Of total Identities</span>
-            </p>
-        </Card>
-        <Card style={{ minHeight: "125px", minWidth: "83x" }}>
-            <Row gutter={16} align="middle">
-                <Col span={12}>
-                    <Statistic
-                        title="Total users assigned"
-                        value="3,897"
-                        valueStyle={{
-                            fontSize: "smaller",
-                            fontWeight: "bold",
-                            color: textColor,
-                        }}
-                    />
-                </Col>
-                <Col span={12}>
-                    <div
-                        style={{
-                            borderRadius: "50%",
-                            height: "45px",
-                            maxWidth: "45px",
-                            minWidth:"43px",
-                            backgroundColor: Colors.secondary,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            marginLeft: "40px",
-                            // padding:"10px"
-                            // boxShadow: '200px rgba(0, 0, 0, 0.1)'
-                        }}
-                        className="min"
-                    >
-                        <CreditCardFilled className="text-white font-bold" />
-                    </div>
-                </Col>
-            </Row>
-            <p
-                style={{
-                    color: "gray.400",
-                    fontSize: "xx-small",
-                    display: "inline-flex",
-                    justifyContent: "space-between",
-                    marginTop: "10px",
-                }}
-            >
-                <span style={{ color: "green", fontWeight: "bold" }}>
-                  +3.48%{" "}
-                </span>
-                <span className="ml-10">Since last month</span>
-            </p>
-        </Card>
-        <Card style={{ minHeight: "125px", minWidth: "83x" }}>
-            <Row gutter={16} align="middle">
-                <Col span={12}>
-                    <Statistic
-                        title="Total requests"
-                        value="897"
-                        valueStyle={{
-                            fontSize: "smaller",
-                            fontWeight: "bold",
-                            color: textColor,
-                        }}
-                    />
-                </Col>
-                <Col span={12}>
-                    <div
-                        style={{
-                            borderRadius: "50%",
-                            height: "45px",
-                            maxWidth: "45px",
-                            minWidth:"43px",
-                            backgroundColor: Colors.secondary,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            marginLeft: "40px",
-                            // padding:"10px"
-                            // boxShadow: '200px rgba(0, 0, 0, 0.1)'
-                        }}
-                        className="min"
-                    >
-                        <CreditCardFilled className="text-white font-bold" />
-                    </div>
-                </Col>
-            </Row>
-            <p
-                style={{
-                    color: "gray.400",
-                    fontSize: "xx-small",
-                    display: "inline-flex",
-                    justifyContent: "space-between",
-                    marginTop: "10px",
-                }}
-            >
-                <span style={{ color: "green", fontWeight: "bold" }}>
-                  +3.48%{" "}
-                </span>
-                <span className="ml-10">Since last month</span>
-            </p>
-        </Card>
-        <Card style={{ minHeight: "125px", minWidth: "83x" }}>
-            <Row gutter={16} align="middle">
-                <Col span={12}>
-                    <Statistic
-                        title="Total denied requests"
-                        value="97"
-                        valueStyle={{
-                            fontSize: "smaller",
-                            fontWeight: "bold",
-                            color: textColor,
-                        }}
-                    />
-                </Col>
-                <Col span={12}>
-                    <div
-                        style={{
-                            borderRadius: "50%",
-                            height: "45px",
-                            maxWidth: "45px",
-                            minWidth:"43px",
-                            backgroundColor: Colors.secondary,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            marginLeft: "40px",
-                            // padding:"10px"
-                            // boxShadow: '200px rgba(0, 0, 0, 0.1)'
-                        }}
-                        className="min"
-                    >
-                        <WalletOutlined className="text-white font-bold" />
-                    </div>
-                </Col>
-            </Row>
-            <p
-                style={{
-                    color: "gray.400",
-                    fontSize: "xx-small",
-                    display: "inline-flex",
-                    justifyContent: "space-between",
-                    marginTop: "10px",
-                }}
-            >
-                <span style={{ color: "green", fontWeight: "bold" }}>
-                  +3.48%{" "}
-                </span>
-                <span className="ml-10">Since last month</span>
-            </p>
-        </Card>
-      </div>:
-       <div className="grid grid-cols-1 mt-3 gap-10 xl:grid-cols-4  lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 px-5 ">
-       <Card style={{ minHeight: "125px", minWidth: "83x" }}>
-         <Row gutter={16} align="middle">
-           <Col span={12}>
-             <Statistic
+      {isOrg === "corpn"? 
+       
+       <div className="mt-10 px-5">
+       <div className="grid grid-cols-1 mt-3 gap-10 xl:grid-cols-4 lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 px-5 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
+         <Card style={{ minHeight: "125px", minWidth: "83x" }}>
+           <Row gutter={16} align="middle">
+             <Col span={12}>
+               <Statistic
                  title="Total Identities"
-                 value="53,897"
-                 valueStyle={{
-                   fontSize: "xx-small",
-                   fontWeight: "bold",
-                   color: textColor,
-                 }}
-             />
-           </Col>
-           <Col span={12}>
-             <div
+                 value={organizationStats.totalIdentities}
+                 valueStyle={{ fontSize: "xx-small", fontWeight: "bold", color: 'black' }}
+               />
+             </Col>
+             <Col span={12}>
+               <div
                  style={{
                    borderRadius: "50%",
                    height: "45px",
                    maxWidth: "45px",
-                   minWidth:"43px",
-                   backgroundColor: Colors.secondary,
+                   minWidth: "43px",
+                   backgroundColor: '#40a9ff',
                    display: "flex",
                    alignItems: "center",
                    justifyContent: "center",
                    marginLeft: "40px",
-                   // padding:"10px"
-                   // boxShadow: '200px rgba(0, 0, 0, 0.1)'
                  }}
-                 className="min"
-             >
-               <WalletOutlined className="text-white font-bold" />
-             </div>
-           </Col>
-         </Row>
-         <p
+               >
+                 <WalletOutlined className="text-white font-bold" />
+               </div>
+             </Col>
+           </Row>
+           <p
              style={{
                color: "gray.400",
                fontSize: "xx-small",
@@ -282,160 +117,315 @@ const Home = () => {
                justifyContent: "space-between",
                marginTop: "10px",
              }}
-         >
-               <span style={{ color: "green", fontWeight: "bold" }}>
-                 +3.48%{" "}
-               </span>
-           <span className="ml-10">Since last month</span>
-         </p>
-       </Card>
-       <Card style={{ minHeight: "125px", minWidth: "83x" }}>
+           >
+             <span style={{ color: "green", fontWeight: "bold" }}>
+               +3.48%
+             </span>
+             <span className="ml-10">Of total Identities</span>
+           </p>
+         </Card>
+         <Card style={{ minHeight: "125px", minWidth: "83x" }}>
            <Row gutter={16} align="middle">
-               <Col span={12}>
-                   <Statistic
-                       title="Total users"
-                       value="3,897"
-                       valueStyle={{
-                           fontSize: "smaller",
-                           fontWeight: "bold",
-                           color: textColor,
-                       }}
-                   />
-               </Col>
-               <Col span={12}>
-                   <div
-                       style={{
-                           borderRadius: "50%",
-                           height: "45px",
-                           maxWidth: "45px",
-                           minWidth:"43px",
-                           backgroundColor: Colors.secondary,
-                           display: "flex",
-                           alignItems: "center",
-                           justifyContent: "center",
-                           marginLeft: "40px",
-                           // padding:"10px"
-                           // boxShadow: '200px rgba(0, 0, 0, 0.1)'
-                       }}
-                       className="min"
-                   >
-                       <CreditCardFilled className="text-white font-bold" />
-                   </div>
-               </Col>
+             <Col span={12}>
+               <Statistic
+                 title="Total Users"
+                 value={organizationStats.totalUsers}
+                 valueStyle={{ fontSize: "smaller", fontWeight: "bold", color: 'black' }}
+               />
+             </Col>
+             <Col span={12}>
+               <div
+                 style={{
+                   borderRadius: "50%",
+                   height: "45px",
+                   maxWidth: "45px",
+                   minWidth: "43px",
+                   backgroundColor: '#40a9ff',
+                   display: "flex",
+                   alignItems: "center",
+                   justifyContent: "center",
+                   marginLeft: "40px",
+                 }}
+               >
+                 <CreditCardFilled className="text-white font-bold" />
+               </div>
+             </Col>
            </Row>
            <p
-               style={{
-                   color: "gray.400",
-                   fontSize: "xx-small",
-                   display: "inline-flex",
-                   justifyContent: "space-between",
-                   marginTop: "10px",
-               }}
+             style={{
+               color: "gray.400",
+               fontSize: "xx-small",
+               display: "inline-flex",
+               justifyContent: "space-between",
+               marginTop: "10px",
+             }}
            >
-               <span style={{ color: "green", fontWeight: "bold" }}>
-                 +3.48%{" "}
-               </span>
-               <span className="ml-10">Since last month</span>
+             <span style={{ color: "green", fontWeight: "bold" }}>
+               +3.48%
+             </span>
+             <span className="ml-10">Since last month</span>
            </p>
-       </Card>
-       <Card style={{ minHeight: "125px", minWidth: "83x" }}>
+         </Card>
+         <Card style={{ minHeight: "125px", minWidth: "83x" }}>
            <Row gutter={16} align="middle">
-               <Col span={12}>
-                   <Statistic
-                       title="Today Shared"
-                       value="897"
-                       valueStyle={{
-                           fontSize: "smaller",
-                           fontWeight: "bold",
-                           color: textColor,
-                       }}
-                   />
-               </Col>
-               <Col span={12}>
-                   <div
-                       style={{
-                           borderRadius: "50%",
-                           height: "45px",
-                           maxWidth: "45px",
-                           minWidth:"43px",
-                           backgroundColor: Colors.secondary,
-                           display: "flex",
-                           alignItems: "center",
-                           justifyContent: "center",
-                           marginLeft: "40px",
-                           // padding:"10px"
-                           // boxShadow: '200px rgba(0, 0, 0, 0.1)'
-                       }}
-                       className="min"
-                   >
-                       <CreditCardFilled className="text-white font-bold" />
-                   </div>
-               </Col>
+             <Col span={12}>
+               <Statistic
+                 title="Today's Shared Identities"
+                 value={organizationStats.todayShared}
+                 valueStyle={{ fontSize: "smaller", fontWeight: "bold", color: 'black' }}
+               />
+             </Col>
+             <Col span={12}>
+               <div
+                 style={{
+                   borderRadius: "50%",
+                   height: "45px",
+                   maxWidth: "45px",
+                   minWidth: "43px",
+                   backgroundColor: '#40a9ff',
+                   display: "flex",
+                   alignItems: "center",
+                   justifyContent: "center",
+                   marginLeft: "40px",
+                 }}
+               >
+                 <CreditCardFilled className="text-white font-bold" />
+               </div>
+             </Col>
            </Row>
            <p
-               style={{
-                   color: "gray.400",
-                   fontSize: "xx-small",
-                   display: "inline-flex",
-                   justifyContent: "space-between",
-                   marginTop: "10px",
-               }}
+             style={{
+               color: "gray.400",
+               fontSize: "xx-small",
+               display: "inline-flex",
+               justifyContent: "space-between",
+               marginTop: "10px",
+             }}
            >
-               <span style={{ color: "green", fontWeight: "bold" }}>
-                 +3.48%{" "}
-               </span>
-               <span className="ml-10">Since last month</span>
+             <span style={{ color: "green", fontWeight: "bold" }}>
+               +3.48%
+             </span>
+             <span className="ml-10">Since last month</span>
            </p>
-       </Card>
-       <Card style={{ minHeight: "125px", minWidth: "83x" }}>
+         </Card>
+         <Card style={{ minHeight: "125px", minWidth: "83x" }}>
            <Row gutter={16} align="middle">
-               <Col span={12}>
-                   <Statistic
-                       title="Inactive Identities"
-                       value="53"
-                       valueStyle={{
-                           fontSize: "smaller",
-                           fontWeight: "bold",
-                           color: textColor,
-                       }}
-                   />
-               </Col>
-               <Col span={12}>
-                   <div
-                       style={{
-                           borderRadius: "50%",
-                           height: "45px",
-                           maxWidth: "45px",
-                           minWidth:"43px",
-                           backgroundColor: Colors.secondary,
-                           display: "flex",
-                           alignItems: "center",
-                           justifyContent: "center",
-                           marginLeft: "40px",
-                           // padding:"10px"
-                           // boxShadow: '200px rgba(0, 0, 0, 0.1)'
-                       }}
-                       className="min"
-                   >
-                       <WalletOutlined className="text-white font-bold" />
-                   </div>
-               </Col>
+             <Col span={12}>
+               <Statistic
+                 title="Inactive Identities"
+                 value={organizationStats.inactiveIdentities}
+                 valueStyle={{ fontSize: "smaller", fontWeight: "bold", color: 'black' }}
+               />
+             </Col>
+             <Col span={12}>
+               <div
+                 style={{
+                   borderRadius: "50%",
+                   height: "45px",
+                   maxWidth: "45px",
+                   minWidth: "43px",
+                   backgroundColor: '#40a9ff',
+                   display: "flex",
+                   alignItems: "center",
+                   justifyContent: "center",
+                   marginLeft: "40px",
+                 }}
+               >
+                 <CreditCardFilled className="text-white font-bold" />
+               </div>
+             </Col>
            </Row>
            <p
-               style={{
-                   color: "gray.400",
-                   fontSize: "xx-small",
-                   display: "inline-flex",
-                   justifyContent: "space-between",
-                   marginTop: "10px",
-               }}
+             style={{
+               color: "gray.400",
+               fontSize: "xx-small",
+               display: "inline-flex",
+               justifyContent: "space-between",
+               marginTop: "10px",
+             }}
            >
-               <span style={{ color: "green", fontWeight: "bold" }}>
-                 +3.48%{" "}
-               </span>
-               <span className="ml-10">Since last month</span>
+             <span style={{ color: "red", fontWeight: "bold" }}>
+               -1.25%
+             </span>
+             <span className="ml-10">Since last month</span>
            </p>
-       </Card>
+         </Card>
+       </div>
+     </div>
+
+       :
+       <div className="mt-10 px-5">
+       {/* <Title level={3}>Corporate Stats</Title> */}
+       <div className="grid grid-cols-1 mt-3 gap-10 xl:grid-cols-4 lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 px-5 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
+         <Card style={{ minHeight: "125px", minWidth: "83x" }}>
+           <Row gutter={16} align="middle">
+             <Col span={12}>
+               <Statistic
+                 title="Total Identifications"
+                 value={corporateStats.totalIdentifications}
+                 valueStyle={{ fontSize: "xx-small", fontWeight: "bold", color: 'black' }}
+               />
+             </Col>
+             <Col span={12}>
+               <div
+                 style={{
+                   borderRadius: "50%",
+                   height: "45px",
+                   maxWidth: "45px",
+                   minWidth: "43px",
+                   backgroundColor: '#40a9ff',
+                   display: "flex",
+                   alignItems: "center",
+                   justifyContent: "center",
+                   marginLeft: "40px",
+                 }}
+               >
+                 <WalletOutlined className="text-white font-bold" />
+               </div>
+             </Col>
+           </Row>
+           <p
+             style={{
+               color: "gray.400",
+               fontSize: "xx-small",
+               display: "inline-flex",
+               justifyContent: "space-between",
+               marginTop: "10px",
+             }}
+           >
+             <span style={{ color: "green", fontWeight: "bold" }}>
+               +3.48%
+             </span>
+             <span className="ml-10">Of total Requests</span>
+           </p>
+         </Card>
+         <Card style={{ minHeight: "125px", minWidth: "83x" }}>
+           <Row gutter={16} align="middle">
+             <Col span={12}>
+               <Statistic
+                 title="Total Users Assigned"
+                 value={corporateStats.totalUsersAssigned}
+                 valueStyle={{ fontSize: "smaller", fontWeight: "bold", color: 'black' }}
+               />
+             </Col>
+             <Col span={12}>
+               <div
+                 style={{
+                   borderRadius: "50%",
+                   height: "45px",
+                   maxWidth: "45px",
+                   minWidth: "43px",
+                   backgroundColor: '#40a9ff',
+                   display: "flex",
+                   alignItems: "center",
+                   justifyContent: "center",
+                   marginLeft: "40px",
+                 }}
+               >
+                 <CreditCardFilled className="text-white font-bold" />
+               </div>
+             </Col>
+           </Row>
+           <p
+             style={{
+               color: "gray.400",
+               fontSize: "xx-small",
+               display: "inline-flex",
+               justifyContent: "space-between",
+               marginTop: "10px",
+             }}
+           >
+             <span style={{ color: "red", fontWeight: "bold" }}>
+               -1.25%
+             </span>
+             <span className="ml-10">Since last month</span>
+           </p>
+         </Card>
+         <Card style={{ minHeight: "125px", minWidth: "83x" }}>
+           <Row gutter={16} align="middle">
+             <Col span={12}>
+               <Statistic
+                 title="Total Requests"
+                 value={corporateStats.totalRequests}
+                 valueStyle={{ fontSize: "smaller", fontWeight: "bold", color: 'black' }}
+               />
+             </Col>
+             <Col span={12}>
+               <div
+                 style={{
+                   borderRadius: "50%",
+                   height: "45px",
+                   maxWidth: "45px",
+                   minWidth: "43px",
+                   backgroundColor: '#40a9ff',
+                   display: "flex",
+                   alignItems: "center",
+                   justifyContent: "center",
+                   marginLeft: "40px",
+                 }}
+               >
+                 <CreditCardFilled className="text-white font-bold" />
+               </div>
+             </Col>
+           </Row>
+           <p
+             style={{
+               color: "gray.400",
+               fontSize: "xx-small",
+               display: "inline-flex",
+               justifyContent: "space-between",
+               marginTop: "10px",
+             }}
+           >
+             <span style={{ color: "green", fontWeight: "bold" }}>
+               +3.48%
+             </span>
+             <span className="ml-10">Since last month</span>
+           </p>
+         </Card>
+         <Card style={{ minHeight: "125px", minWidth: "83x" }}>
+           <Row gutter={16} align="middle">
+             <Col span={12}>
+               <Statistic
+                 title="Total Denied Requests"
+                 value={corporateStats.totalDeniedRequests}
+                 valueStyle={{ fontSize: "smaller", fontWeight: "bold", color: 'black' }}
+               />
+             </Col>
+             <Col span={12}>
+               <div
+                 style={{
+                   borderRadius: "50%",
+                   height: "45px",
+                   maxWidth: "45px",
+                   minWidth: "43px",
+                   backgroundColor: '#40a9ff',
+                   display: "flex",
+                   alignItems: "center",
+                   justifyContent: "center",
+                   marginLeft: "40px",
+                 }}
+               >
+                 <CreditCardFilled className="text-white font-bold" />
+               </div>
+             </Col>
+           </Row>
+           <p
+             style={{
+               color: "gray.400",
+               fontSize: "xx-small",
+               display: "inline-flex",
+               justifyContent: "space-between",
+               marginTop: "10px",
+             }}
+           >
+             <span style={{ color: "red", fontWeight: "bold" }}>
+               -1.25%
+             </span>
+             <span className="ml-10">Since last month</span>
+           </p>
+         </Card>
+       </div>
      </div>
       }
      
@@ -477,7 +467,7 @@ const Home = () => {
                               className="timelinelist lastweek text-xs "
                               reverse={reverse}
                           >
-                              {timelineList.map((t, index) => (
+                              {timelineList.map((t:any, index) => (
                                   <Timeline.Item color={t.color} key={index}>
                                       <h3 className=" text-sm text-left ">{t.title}</h3>
                                       <Text>{t.time}</Text>

@@ -71,10 +71,12 @@ const Requests = () => {
   };
 
   const handleEdit = (id:string) => {
+    navigate('/organization_identity_request_process/' + `${id}`);
     console.log(`Edit action for ID: ${id}`);
   };
 
   const handleDelete = (id:string) => {
+    navigate('/organization_identity_request_process/' + `${id}`);
     console.log(`Delete action for ID: ${id}`);
   };
 

@@ -15,6 +15,7 @@ import { useFormPost } from "../../hooks/formDataHook";
 import { networkUrls } from "../../utils/apis";
 import axios from "axios";
 import DocumentViewer from "../../components/identityViewer/IdentityViewer";
+import { DatePicker } from "antd";
 
 interface IdentificationRequestInterFc {
   id: string;
@@ -110,7 +111,7 @@ const OrganizationIdentityRequestProcessing = () => {
 
   const handleConnectToNetwork = async () => {
     const body = {
-      username: orgInfo?.org_name === "NIDA" ?  "NIDAadm": orgInfo?.org_name === "DIT"? "DITadm":orgInfo?.org_name === "NHIF"? "NHIFadm":orgInfo?.org_name === "RITA"? "RITAadm":"TRAadm",
+      username: orgInfo?.org_name === "NIDA" ?  "NIDAadm": orgInfo?.org_name === "DIT"? "DITadm":orgInfo?.org_name === "NHIF"? "NHIFadm":orgInfo?.org_name === "RITA"? "RITadm":"TRAadm",
       orgName: orgInfo?.org_name === "NIDA" ?  "NIDAOrg": orgInfo?.org_name === "DIT"? "DITOrg":orgInfo?.org_name === "NHIF"? "NHIFOrg":orgInfo?.org_name === "RITA"? "RITAOrg":"TRAOrg",
     };
     setisConnecting(true);
@@ -321,7 +322,7 @@ const OrganizationIdentityRequestProcessing = () => {
     }
     const requestHeader = {
       headers: {
-        authorization: "Bearer " + connectionToken,
+        authorization: "Bearer " + connectionToken ,
       },
     };
     const tranactionId = "id" + Math.random().toString(16).slice(2);
@@ -355,7 +356,9 @@ const OrganizationIdentityRequestProcessing = () => {
       await axios
         .post(networkUrls.addCertToNtwork, data, requestHeader)
         .then((res) => {
-          if (res.status === 200) {
+          console.log(res);
+          
+          if (res.data?.result?.result.success) {
             dispatch(
               addAlert({
                 title: "Identity assigned success",
@@ -457,7 +460,9 @@ const OrganizationIdentityRequestProcessing = () => {
                     </div>
                   ) : IdetificationRequest?.request_state === "Granted" ? (
                     <div>
-                      <button className="animate-pulse bg-green-200">
+                      <button className="animate-pulse bg-green-200"
+                      // onClick={}
+                      >
                         Granted
                       </button>
                     </div>
@@ -560,7 +565,9 @@ const OrganizationIdentityRequestProcessing = () => {
                   </div>
                 ) : IdetificationRequest?.request_state === "Granted" ? (
                   <div>
-                    <button className="animate-pulse bg-green-200">
+                    <button className="animate-pulse bg-green-200"
+                    onClick={handlePostCertificateToNetwork}
+                    >
                       Granted
                     </button>
                     {/* <button
@@ -618,6 +625,8 @@ const OrganizationIdentityRequestProcessing = () => {
                   whiteboard to plan, coordinate and discuss
                 </p>
                 {connectionToken ? (
+                <>
+                <DatePicker className="mb-3"></DatePicker>
                   <button
                     className="linear mt-4 flex items-center bg-blue-500 justify-center rounded-xl px-2 py-2 text-sm font-medium text-white transition duration-200 hover:bg-blue-600"
                     onClick={() => {
@@ -627,6 +636,7 @@ const OrganizationIdentityRequestProcessing = () => {
                   >
                     Publish to Blockchain now
                   </button>
+                </>
                 ) : (
                   <button
                     className="linear mt-4 flex items-center bg-blue-500 justify-center rounded-xl px-2 py-2 text-sm font-medium text-white transition duration-200 hover:bg-blue-600"

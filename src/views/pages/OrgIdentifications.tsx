@@ -9,6 +9,7 @@ import IdentityAddModal from "../../components/dialogs/OrgIdentificationAddModal
 import BreadCrumb from "../../components/Breadcrumb/BreadCrumb";
 import { renderDateTime } from "../../utils/renderDateTime";
 
+
 interface identificationsInterFc {
   cert_id: string;
   cert_name: string;
@@ -31,13 +32,18 @@ const OrgIdentifications = () => {
   const loadData = async () => {
     try {
       setisloading(true);
+      const responseOrg = await dataFetch.fetch({
+        url: organizationUrls.organizationInfo,
+      });
+     
       const response = await dataFetch.fetch({
         url: organizationUrls.organizationIdentities,
       });
       console.log(response);
 
       if (response) {
-        setidentifications(response?.data);
+        const data = response?.data.filter((id:any) => id.org_id === responseOrg?.data.org_id)
+        setidentifications(data);
       }
       setisloading(false);
     } catch (error) {
@@ -112,9 +118,19 @@ const OrgIdentifications = () => {
                     onClick={() => {
                       console.log(id);
                     }}
+                    className=""
+                    type="dashed"
                   >
-                    View
+                    Edit
                   </Button>
+                  {/* <Button
+                    onClick={() => {
+                      console.log(id);
+                    }}
+                     className="hover:bg-red-400 hover:border-red-400 "
+                  >
+                    Delete
+                  </Button> */}
                 </div>
               )}
             />

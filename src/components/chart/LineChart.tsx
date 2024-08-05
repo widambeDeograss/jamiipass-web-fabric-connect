@@ -4,9 +4,59 @@ import ReactApexChart from "react-apexcharts";
 import { Typography } from "antd";
 import { MinusOutlined } from "@ant-design/icons";
 import lineChart from "./configs/lineChart";
+import { useEffect, useState } from "react";
+import { useAppDispatch } from "../../app/store/store-hooks";
+import { useDataFetch } from "../../hooks/datahook";
+import { organizationUrls } from "../../utils/apis";
+import { addAlert } from "../../app/store/slices/AlertsState_slice";
 
 function LineChart() {
   const { Title, Paragraph } = Typography;
+  const [ChartSiries, setChartSiries] = useState([]);
+  const [isloading, setisloading] = useState(false);
+  const dispatch = useAppDispatch();
+  const dataFetch = useDataFetch();
+
+  const loadData = async () => {
+  
+    try {
+      setisloading(true);
+      const responseOrg = await dataFetch.fetch({
+        url: organizationUrls.organizationInfo,
+      });
+
+      if (responseOrg) {
+        const response = await dataFetch.fetch({
+          url: organizationUrls.organizationStatsPercentage + `${responseOrg?.data.org_id}`,
+        });
+        console.log(response);
+        setChartSiries(response);
+      //  const data =  response?.series?.map((st:any) => {
+      //    return{
+      //     ...st,
+      //     color: "#4CA9FF"
+      //    }
+      //  })
+      //  console.log(data);
+      //  setChartSiries(data);
+       
+      }
+      setisloading(false);
+    } catch (error) {
+      setisloading(false);
+      dispatch(
+        addAlert({
+          title: "Error",
+          type: "error",
+          message: "Failed to fetch Org Stats try again later!",
+        })
+      );
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   return (
     <>
@@ -18,17 +68,17 @@ function LineChart() {
           </Paragraph>
         </div>
         <div className="sales">
-          <ul>
+          {/* <ul>
             <li>{<MinusOutlined />} Nhif high</li>
             <li>{<MinusOutlined />} Nhif low</li>
-          </ul>
+          </ul> */}
         </div>
       </div>
 
       <ReactApexChart
         className="full-width"
         options={lineChart.options}
-        series={lineChart.series}
+        series={ChartSiries}
         type="area"
         height={350}
         width={"100%"}

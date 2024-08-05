@@ -35,6 +35,8 @@ const CoporateProfile: React.FC = () => {
         url: corporateUrls.corporateInfo,
       });
       if (response) {
+        console.log(response);
+        
         setcorpInfo(response?.data);
       }
       setIsLoading(false);
@@ -64,7 +66,7 @@ const CoporateProfile: React.FC = () => {
     setFile(event?.target?.files[0]);
   };
 
-  const handleSubmitProfilePic = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmitProfilePic = async (event: any) => {
     event.preventDefault();
     if (!file) {
       dispatch(addAlert({title:"Warning", type:"warning", message:"Select an image file first!"}));
@@ -90,21 +92,37 @@ const CoporateProfile: React.FC = () => {
 
     }
   };
-  
-  const handleCancel = () => {
-    // Handle cancel action for personal information
+
+  const updatePassword = async (values:any) => {
+    try {
+      const response = await axios.put(`${baseUrl}/app/corp/update/${corpInfo?.corp_id}/password`, values);
+      console.log(response);
+      
+      if (response.status === 200) {
+        dispatch(addAlert({title:"Sucess", type:"success", message:"Profile Info updated successfully!"}));
+        
+      }
+      // You can add more actions here, like updating the UI
+    } catch (error) {
+      dispatch(addAlert({title:"Error", type:"error", message:"Failed to update profile!"}));
+
+    }
   };
 
-  const handlePhotoCancel = () => {
-    // Handle cancel action for user photo
-  };
+  const updateProfileInfo = async (values:any) => {
+    try {
+      const response = await axios.put(`${baseUrl}/app/corp/update/${corpInfo?.corp_id}`, values);
+      console.log(response);
+      
+      if (response.status === 200) {
+        dispatch(addAlert({title:"Sucess", type:"success", message:"Profile Info updated successfully!"}));
+        
+      }
+      // You can add more actions here, like updating the UI
+    } catch (error) {
+      dispatch(addAlert({title:"Error", type:"error", message:"Failed to update profile!"}));
 
-  const deletePhoto = () => {
-    // Handle delete action for user photo
-  };
-
-  const updatePhoto = () => {
-    // Handle update action for user photo
+    }
   };
   return (
     <>
@@ -127,16 +145,20 @@ const CoporateProfile: React.FC = () => {
             </div>
             <div className="p-7">
               <Form
-                // onFinish={handleSubmit}
+                onFinish={updateProfileInfo}
                 layout="vertical"
                 className="row-col"
                 disabled={!isEditing}
+
+                initialValues={{
+                  email: corpInfo?.email,
+                }}
               >
                 <Form.Item
                   className="username"
-                  label="Corp email"
+                  label='email'
                   name="email"
-                  initialValue={corpInfo?.email}
+                  // initialValue={corpInfo?.email}
                   rules={[
                     {
                       required: true,
@@ -144,7 +166,7 @@ const CoporateProfile: React.FC = () => {
                     },
                   ]}
                 >
-                  <Input type="email" className="" />
+                  <Input type="email" className=""  placeholder={corpInfo?.email}/>
                 </Form.Item>
                 <Form.Item
                   className="username"
@@ -158,7 +180,7 @@ const CoporateProfile: React.FC = () => {
                     },
                   ]}
                 >
-                  <Input placeholder="Name" type="text" className="" />
+                  <Input  type="text" className="" placeholder={corpInfo?.corp_name} />
                 </Form.Item>
                 <Form.Item
                   className="username"
@@ -172,7 +194,7 @@ const CoporateProfile: React.FC = () => {
                     },
                   ]}
                 >
-                  <Input  type="text" className="" />
+                  <Input  type="text" className=""  placeholder={corpInfo?.phone} />
                 </Form.Item>
 
                 {/* <Form.Item
@@ -301,10 +323,10 @@ const CoporateProfile: React.FC = () => {
                     Cancel
                   </Button>
                   <Button
-                  onClick={handleSubmitProfilePic}
+                   onClick={handleSubmitProfilePic}
                     // style={{ width: "100%" }}
                     type="primary"
-                    htmlType="submit"
+                    // htmlType="submit"
                     className="bg-blue-500"
                     disabled={!isEditing}
                   >
@@ -324,7 +346,7 @@ const CoporateProfile: React.FC = () => {
             </div>
             <div className="p-7">
               <Form
-                // onFinish={handleSubmit}
+                onFinish={updatePassword}
                 layout="vertical"
                 className="row-col"
                 disabled={!isEditing}

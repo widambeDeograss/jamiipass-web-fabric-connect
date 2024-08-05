@@ -21,6 +21,8 @@ export const corporateUrls = {
 export const organizationUrls = {
     organizationInfo: baseUrl + "/app/org/org_info",
     organizations: baseUrl + "/app/org/all_orgs",
+    organizationStats: baseUrl + "/app/org/stats/identity-requests-per-month",
+    organizationStatsPercentage: baseUrl + "/app/org/stats/identification-requests-percentage/",
     organizationCreateIdentity: baseUrl + "/app/org/create_identification",
     organizationIdentities: baseUrl + "/app/org/all_identifications",
     organizationIdentityReguests: baseUrl + "/app/org/all_identification_requests",
